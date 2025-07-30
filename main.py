@@ -5,6 +5,15 @@ import random
 import json
 import os
 from keep_alive import keep_alive  # Flaskサーバーを別ファイルから読み込み
+import asyncio
+from datetime import datetime, timedelta
+
+# 必要に応じて先頭で定義しておく
+POKER_LOG_CHANNEL_ID = 1399363982552338576
+POKER_BOT_NAME = "キバ#5711"
+ENTRY_FEE = 1000
+CURRENCY_UNIT = "spt"
+PAY_COMMAND_PREFIX = "/pay"  # VirtualCryptoのコマンド
 
 # --- Discord Bot設定 ---
 intents = discord.Intents.default()
@@ -179,7 +188,58 @@ async def poker_join(interaction: discord.Interaction):
     POKER_GAMES[interaction.channel_id] = PokerGameState(owner_id=interaction.user.id)
     view = PokerJoinView(channel_id=interaction.channel_id)
     await interaction.response.send_message("ポーカーゲームを開始しました！\n参加するには以下のボタンを押してください👇", view=view)    
+@bot.tree.command(name="poker_start", description="ポーカーを開始（主催者のみ）")
+async def poker_start(interaction: discord.Interaction):
+    game = POKER_GAMES.get(interaction.channel_id)
+    if not game:
+        await interaction.response.send_message("このチャンネルではポーカーがまだ始まっていません。", ephemeral=True)
+        return
+    if interaction.user.id != game.owner_id:
+        await interaction.response.send_message("このコマンドは主催者のみ使用できます。", ephemeral=True)
+        return
+    if len(game.players) < 2:
+        await interaction.response.send_message("参加者が2人以上必要です。", ephemeral=True)
+        return
 
+    await interaction.response.send_message(f"🎮 ポーカーを開始します！\n参加費は **{ENTRY_FEE}{CURRENCY_UNIT}** です。\n3分以内に `{PAY_COMMAND_PREFIX} {POKER_BOT_NAME} {ENTRY_FEE}` を実行してください。")
+
+    await verify_payments(interaction.channel, game)
+
+async def verify_payments(channel, game):
+    log_channel = bot.get_channel(POKER_LOG_CHANNEL_ID)
+    if log_channel is None:
+        await channel.send("⚠️ ログチャンネルが見つかりません。")
+        return
+
+    await asyncio.sleep(180)  # 3分待機
+    after_time = datetime.utcnow() - timedelta(minutes=3)
+    messages = [m async for m in log_channel.history(limit=200, after=after_time)]
+
+    paid_user_ids = set()
+    for msg in messages:
+        if msg.author.name != "VirtualCrypto":
+            continue
+        if f"{ENTRY_FEE} {CURRENCY_UNIT}" in msg.content and POKER_BOT_NAME in msg.content:
+            for player in game.players:
+                if player.display_name in msg.content or player.mention in msg.content:
+                    paid_user_ids.add(player.id)
+
+    remaining_players = [p for p in game.players if p.id in paid_user_ids]
+    removed_players = [p for p in game.players if p.id not in paid_user_ids]
+
+    game.players = remaining_players
+
+    if removed_players:
+        names = ", ".join(p.display_name for p in removed_players)
+        await channel.send(f"⏰ 支払い未確認のため、次のプレイヤーは除外されました: {names}")
+
+    if len(game.players) < 2:
+        await channel.send("参加者が2人未満のため、ゲームはキャンセルされました。")
+        del POKER_GAMES[channel.id]
+        return
+
+    await channel.send(f"✅ 支払い確認完了！参加者数: {len(game.players)}人\nゲームを進行します...")
+    # ここにゲーム進行処理を続けて実装（後ほど）
 @bot.event
 async def on_ready():
     bot.add_view(JoinView(None))         # クイズ用のボタン
