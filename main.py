@@ -17,6 +17,13 @@ with open("pokedex.json", "r", encoding="utf-8") as f:
     POKEDEX = {int(k): v for k, v in json.load(f).items()}
 
 games = {}
+POKER_GAMES = {}  # チャンネルIDごとのポーカー状態
+
+class PokerGameState:
+    def __init__(self, owner_id):
+        self.owner_id = owner_id
+        self.players = []  # 順番を保持するためリスト
+        self.started = False
 
 class GameState:
     def __init__(self, owner_id):
@@ -39,6 +46,26 @@ class JoinView(discord.ui.View):
             return
         game.participants.add(interaction.user.id)
         await interaction.response.send_message(f"{interaction.user.display_name} が参加しました！", ephemeral=True)
+class PokerJoinView(discord.ui.View):
+    def __init__(self, channel_id):
+        super().__init__(timeout=None)
+        self.channel_id = channel_id
+
+    @discord.ui.button(label="参加する", style=discord.ButtonStyle.primary, custom_id="poker_join_button")
+    async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
+        game = POKER_GAMES.get(self.channel_id)
+        if not game or game.started:
+            await interaction.response.send_message("現在このチャンネルでは参加できません。", ephemeral=True)
+            return
+
+        if interaction.user.id in [p.id for p in game.players]:
+            await interaction.response.send_message("すでに参加しています。", ephemeral=True)
+            return
+
+        game.players.append(interaction.user)
+        await interaction.response.send_message(f"{interaction.user.display_name} さんが参加しました！", ephemeral=True)
+        await interaction.channel.send(f"🃏 {interaction.user.mention} さんがポーカーに参加しました！")
+
 
 @bot.tree.command(name="quiz_start")
 async def quiz_start(interaction: discord.Interaction):
@@ -143,10 +170,25 @@ async def quiz_skip(interaction: discord.Interaction):
     game.current_answer = None
     await interaction.response.send_message("問題をスキップしました。次の問題を出題します。")
     await send_quiz(interaction.channel, game)
+@bot.tree.command(name="poker_join", description="ポーカーの参加者を募集します")
+async def poker_join(interaction: discord.Interaction):
+    if interaction.channel_id in POKER_GAMES:
+        await interaction.response.send_message("このチャンネルではすでにポーカーが開催中です。", ephemeral=True)
+        return
+
+    POKER_GAMES[interaction.channel_id] = PokerGameState(owner_id=interaction.user.id)
+    view = PokerJoinView(channel_id=interaction.channel_id)
+    await interaction.response.send_message("ポーカーゲームを開始しました！\n参加するには以下のボタンを押してください👇", view=view)    
 
 @bot.event
 async def on_ready():
     bot.add_view(JoinView(None))  # channel_id は Viewの状態を保持するために None でもOK
+    await bot.tree.sync()
+    print(f"Bot connected as {bot.user}")
+@bot.event
+async def on_ready():
+    bot.add_view(JoinView(None))
+    bot.add_view(PokerJoinView(None))  # Poker用の永続Viewも登録
     await bot.tree.sync()
     print(f"Bot connected as {bot.user}")
 
