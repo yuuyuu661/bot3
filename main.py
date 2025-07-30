@@ -147,6 +147,7 @@ async def quiz_skip(interaction: discord.Interaction):
 @bot.event
 async def on_ready():
     await bot.tree.sync()
+    bot.add_view(JoinView(None))  # <-- これを追加！
     print(f"Bot connected as {bot.user}")
 
 keep_alive()  # Flaskサーバー起動
