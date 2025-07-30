@@ -182,15 +182,11 @@ async def poker_join(interaction: discord.Interaction):
 
 @bot.event
 async def on_ready():
-    bot.add_view(JoinView(None))  # channel_id は Viewの状態を保持するために None でもOK
+    bot.add_view(JoinView(None))         # クイズ用のボタン
+    bot.add_view(PokerJoinView(None))    # ポーカー用のボタン
     await bot.tree.sync()
     print(f"Bot connected as {bot.user}")
-@bot.event
-async def on_ready():
-    bot.add_view(JoinView(None))
-    bot.add_view(PokerJoinView(None))  # Poker用の永続Viewも登録
-    await bot.tree.sync()
-    print(f"Bot connected as {bot.user}")
+
 
 keep_alive()  # Flaskサーバー起動
 
