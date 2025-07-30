@@ -28,10 +28,10 @@ class GameState:
 
 class JoinView(discord.ui.View):
     def __init__(self, channel_id):
-        super().__init__(timeout=None)
+        super().__init__(timeout=None)  # 永続Viewにするための条件1
         self.channel_id = channel_id
 
-    @discord.ui.button(label="参加します", style=discord.ButtonStyle.success)
+    @discord.ui.button(label="参加します", style=discord.ButtonStyle.success, custom_id="join_quiz_button")  # 条件2
     async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
         game = games.get(self.channel_id)
         if not game or game.active:
@@ -146,8 +146,8 @@ async def quiz_skip(interaction: discord.Interaction):
 
 @bot.event
 async def on_ready():
+    bot.add_view(JoinView(None))  # channel_id は Viewの状態を保持するために None でもOK
     await bot.tree.sync()
-    bot.add_view(JoinView(None))  # <-- これを追加！
     print(f"Bot connected as {bot.user}")
 
 keep_alive()  # Flaskサーバー起動
