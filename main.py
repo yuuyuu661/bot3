@@ -188,7 +188,7 @@ async def poker_join(interaction: discord.Interaction):
     POKER_GAMES[interaction.channel_id] = PokerGameState(owner_id=interaction.user.id)
     view = PokerJoinView(channel_id=interaction.channel_id)
     await interaction.response.send_message("ポーカーゲームを開始しました！\n参加するには以下のボタンを押してください👇", view=view)    
-@bot.tree.command(name="poker_start", description="ポーカーを開始（主催者のみ）")
+@bot.tree.command(name="poker_start", description="ポーカーを開始（主催者のみ）", guild=discord.Object(id=1398607685158440991))
 async def poker_start(interaction: discord.Interaction):
     game = POKER_GAMES.get(interaction.channel_id)
     if not game:
@@ -242,9 +242,9 @@ async def verify_payments(channel, game):
     # ここにゲーム進行処理を続けて実装（後ほど）
 @bot.event
 async def on_ready():
-    bot.add_view(JoinView(None))         # クイズ用のボタン
-    bot.add_view(PokerJoinView(None))    # ポーカー用のボタン
-    await bot.tree.sync()
+    bot.add_view(JoinView(None))         
+    bot.add_view(PokerJoinView(None))    
+    await bot.tree.sync(guild=discord.Object(id=1398607685158440991))  # ギルドID指定で確実に同期
     print(f"Bot connected as {bot.user}")
 
 
