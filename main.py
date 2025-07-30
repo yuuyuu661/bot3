@@ -4,20 +4,7 @@ from discord import app_commands
 import random
 import json
 import os
-from flask import Flask
-from threading import Thread
-
-# --- Flaskアプリ定義（UptimeRobot対応） ---
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "Bot is running!", 200
-
-def run():
-    app.run(host="0.0.0.0", port=8080)
-
-Thread(target=run).start()
+from keep_alive import keep_alive  # Flaskサーバーを別ファイルから読み込み
 
 # --- Discord Bot設定 ---
 intents = discord.Intents.default()
@@ -161,5 +148,7 @@ async def quiz_skip(interaction: discord.Interaction):
 async def on_ready():
     await bot.tree.sync()
     print(f"Bot connected as {bot.user}")
+
+keep_alive()  # Flaskサーバー起動
 
 bot.run(os.environ["DISCORD_TOKEN"])
