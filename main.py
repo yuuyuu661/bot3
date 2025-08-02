@@ -259,7 +259,10 @@ async def slot(interaction: discord.Interaction, coins: int):
     }
 
     slot_url = f"https://slot-production-be36.up.railway.app/?session={session_id}"
-    await interaction.response.send_message(f"🎰 スロットゲームを開始します！\n[こちらからプレイ](<{slot_url}>)", ephemeral=True)
+    await interaction.response.send_message(
+        f"🎰 スロットゲームを開始します！\n[こちらからプレイ](<{slot_url}>)",
+        ephemeral=True
+    )
 
 @bot.event
 async def on_ready():
@@ -272,4 +275,5 @@ async def on_ready():
 keep_alive()  # Flaskサーバー起動
 
 bot.run(os.environ["DISCORD_TOKEN"])
+
 
