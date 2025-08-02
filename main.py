@@ -240,6 +240,27 @@ async def verify_payments(channel, game):
 
     await channel.send(f"✅ 支払い確認完了！参加者数: {len(game.players)}人\nゲームを進行します...")
     # ここにゲーム進行処理を続けて実装（後ほど）
+import uuid
+
+SESSION_DATA = {}
+
+@bot.tree.command(name="slot", description="スロットゲームを開始します")
+@app_commands.describe(coins="初期コイン数（例：100）")
+async def slot(interaction: discord.Interaction, coins: int):
+    if coins <= 0:
+        await interaction.response.send_message("コイン数は1以上にしてください。", ephemeral=True)
+        return
+
+    session_id = str(uuid.uuid4())
+    SESSION_DATA[session_id] = {
+        "user_id": interaction.user.id,
+        "coins": coins,
+        "expires_at": datetime.utcnow() + timedelta(minutes=10)
+    }
+
+    slot_url = f"https://slot-production-be36.up.railway.app/?session={session_id}"
+    await interaction.response.send_message(f"🎰 スロットゲームを開始します！\n[こちらからプレイ](<{slot_url}>)", ephemeral=True)
+
 @bot.event
 async def on_ready():
     bot.add_view(JoinView(None))         
@@ -251,3 +272,4 @@ async def on_ready():
 keep_alive()  # Flaskサーバー起動
 
 bot.run(os.environ["DISCORD_TOKEN"])
+
