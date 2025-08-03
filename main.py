@@ -180,10 +180,10 @@ async def quiz_skip(interaction: discord.Interaction):
 
 @bot.event
 async def on_ready():
-    bot.add_view(JoinView(None))         
-    bot.add_view(PokerJoinView(None))    
-    await bot.tree.sync(guild=discord.Object(id=1398607685158440991))  # ギルドID指定で確実に同期
-    print(f"Bot connected as {bot.user}")
+    bot.add_view(PokerJoinView(None))  # 必要なら JoinView も
+    await bot.tree.sync(guild=discord.Object(id=1398607685158440991))
+    print(f"✅ Bot connected as {bot.user}")
+
 @bot.tree.command(name="joinpoker", description="ポーカーの参加者を募集します")
 async def join_poker(interaction: discord.Interaction):
     if interaction.channel_id in POKER_GAMES:
@@ -224,6 +224,7 @@ class PokerJoinView(discord.ui.View):
     keep_alive()  # Flaskサーバー起動
 
 bot.run(os.environ["DISCORD_TOKEN"])
+
 
 
 
