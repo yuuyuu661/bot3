@@ -196,7 +196,7 @@ async def join_poker(interaction: discord.Interaction):
         "🃏 ポーカーゲームを開始しました！\n参加するには以下のボタンを押してください👇",
         view=view
     )
-lass PokerJoinView(discord.ui.View):
+class PokerJoinView(discord.ui.View):
     def __init__(self, channel_id):
         super().__init__(timeout=None)
         self.channel_id = channel_id
@@ -224,6 +224,7 @@ lass PokerJoinView(discord.ui.View):
     keep_alive()  # Flaskサーバー起動
 
 bot.run(os.environ["DISCORD_TOKEN"])
+
 
 
 
