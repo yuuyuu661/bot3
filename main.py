@@ -227,9 +227,14 @@ async def on_ready():
     bot.add_view(PokerJoinView(None))
     await bot.tree.sync(guild=discord.Object(id=1398607685158440991))
     print(f"✅ Bot connected as {bot.user}")
+@bot.command()
+async def sync(ctx):
+    await bot.tree.sync(guild=ctx.guild)
+    await ctx.send("✅ コマンドを再同期しました")
 
 keep_alive()
 bot.run(os.environ["DISCORD_TOKEN"])
+
 
 
 
