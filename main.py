@@ -20,9 +20,6 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-with open("pokedex.json", "r", encoding="utf-8") as f:
-    POKEDEX = {int(k): v for k, v in json.load(f).items()}
-
 games = {}
 POKER_GAMES = {}  # チャンネルIDごとのポーカー状態
 with open("pokedex.json", "r", encoding="utf-8") as f:
@@ -135,6 +132,7 @@ async def on_message(message):
         else:
             game.current_answer = None
             await send_quiz(message.channel, game)
+            await bot.process_commands(message)
 
 async def announce_winner(channel, game):
     sorted_scores = sorted(game.scores.items(), key=lambda x: x[1], reverse=True)
@@ -234,6 +232,7 @@ async def sync(ctx):
 
 keep_alive()
 bot.run(os.environ["DISCORD_TOKEN"])
+
 
 
 
