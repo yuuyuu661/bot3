@@ -115,24 +115,24 @@ def normalize(text):
 async def on_message(message):
     if message.author.bot:
         return
+
     game = games.get(message.channel.id)
-    if not game or not game.active:
-        return
-    if message.author.id not in game.participants:
-        return
-    name1 = POKEDEX.get(game.current_answer[0])
-    name2 = POKEDEX.get(game.current_answer[1])
-    if normalize(name1) in normalize(message.content) and normalize(name2) in normalize(message.content):
-        uid = message.author.id
-        game.scores[uid] = game.scores.get(uid, 0) + 1
-        await message.channel.send(f"🎉 {message.author.display_name} 正解！ 現在のスコア: {game.scores[uid]}")
-        if game.scores[uid] >= 10:
-            await announce_winner(message.channel, game)
-            del games[message.channel.id]
-        else:
-            game.current_answer = None
-            await send_quiz(message.channel, game)
-            await bot.process_commands(message)
+    if game and game.active and message.author.id in game.participants:
+        name1 = POKEDEX.get(game.current_answer[0])
+        name2 = POKEDEX.get(game.current_answer[1])
+        if normalize(name1) in normalize(message.content) and normalize(name2) in normalize(message.content):
+            uid = message.author.id
+            game.scores[uid] = game.scores.get(uid, 0) + 1
+            await message.channel.send(f"🎉 {message.author.display_name} 正解！ 現在のスコア: {game.scores[uid]}")
+            if game.scores[uid] >= 10:
+                await announce_winner(message.channel, game)
+                del games[message.channel.id]
+            else:
+                game.current_answer = None
+                await send_quiz(message.channel, game)
+
+    # ✅ 常に最後に入れること
+    await bot.process_commands(message)
 
 async def announce_winner(channel, game):
     sorted_scores = sorted(game.scores.items(), key=lambda x: x[1], reverse=True)
@@ -232,6 +232,7 @@ async def sync(ctx):
 
 keep_alive()
 bot.run(os.environ["DISCORD_TOKEN"])
+
 
 
 
