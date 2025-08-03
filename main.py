@@ -25,6 +25,8 @@ with open("pokedex.json", "r", encoding="utf-8") as f:
 
 games = {}
 POKER_GAMES = {}  # チャンネルIDごとのポーカー状態
+with open("pokedex.json", "r", encoding="utf-8") as f:
+    POKEDEX = {int(k): v for k, v in json.load(f).items()}
 
 class PokerGameState:
     def __init__(self, owner_id):
@@ -177,25 +179,15 @@ async def quiz_skip(interaction: discord.Interaction):
     game.current_answer = None
     await interaction.response.send_message("問題をスキップしました。次の問題を出題します。")
     await send_quiz(interaction.channel, game)
+# --------------------
+# ポーカー機能
+# --------------------
+class PokerGameState:
+    def __init__(self, owner_id):
+        self.owner_id = owner_id
+        self.players = []
+        self.started = False
 
-@bot.event
-async def on_ready():
-    bot.add_view(PokerJoinView(None))  # 必要なら JoinView も
-    await bot.tree.sync(guild=discord.Object(id=1398607685158440991))
-    print(f"✅ Bot connected as {bot.user}")
-
-@bot.tree.command(name="joinpoker", description="ポーカーの参加者を募集します")
-async def join_poker(interaction: discord.Interaction):
-    if interaction.channel_id in POKER_GAMES:
-        await interaction.response.send_message("このチャンネルではすでにポーカーが開催中です。", ephemeral=True)
-        return
-
-    POKER_GAMES[interaction.channel_id] = PokerGameState(owner_id=interaction.user.id)
-    view = PokerJoinView(channel_id=interaction.channel_id)
-    await interaction.response.send_message(
-        "🃏 ポーカーゲームを開始しました！\n参加するには以下のボタンを押してください👇",
-        view=view
-    )
 class PokerJoinView(discord.ui.View):
     def __init__(self, channel_id):
         super().__init__(timeout=None)
@@ -215,15 +207,34 @@ class PokerJoinView(discord.ui.View):
         game.players.append(interaction.user)
         await interaction.response.send_message("参加が完了しました！", ephemeral=True)
         await interaction.channel.send(f"✅ {interaction.user.mention} さんがポーカーに参加しました！")
-    @bot.event
-    async def on_ready():
-        bot.add_view(PokerJoinView(None))  # 永続化のため登録
-    await bot.tree.sync()
-        print(f"✅ Bot connected as {bot.user}")
 
-    keep_alive()  # Flaskサーバー起動
+@bot.tree.command(name="joinpoker", description="ポーカーの参加者を募集します")
+async def join_poker(interaction: discord.Interaction):
+    if interaction.channel_id in POKER_GAMES:
+        await interaction.response.send_message("このチャンネルではすでにポーカーが開催中です。", ephemeral=True)
+        return
 
+    POKER_GAMES[interaction.channel_id] = PokerGameState(owner_id=interaction.user.id)
+    view = PokerJoinView(channel_id=interaction.channel_id)
+    await interaction.response.send_message(
+        "🃏 ポーカーゲームを開始しました！\n参加するには以下のボタンを押してください👇",
+        view=view
+    )
+
+@bot.event
+async def on_ready():
+    bot.add_view(JoinView(None))
+    bot.add_view(PokerJoinView(None))
+    await bot.tree.sync(guild=discord.Object(id=1398607685158440991))
+    print(f"✅ Bot connected as {bot.user}")
+
+keep_alive()
 bot.run(os.environ["DISCORD_TOKEN"])
+
+
+
+
+
 
 
 
