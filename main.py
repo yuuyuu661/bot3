@@ -24,12 +24,6 @@ games = {}
 with open("pokedex.json", "r", encoding="utf-8") as f:
     POKEDEX = {int(k): v for k, v in json.load(f).items()}
 
-class PokerGameState:
-    def __init__(self, owner_id):
-        self.owner_id = owner_id
-        self.players = []  # 順番を保持するためリスト
-        self.started = False
-
 class GameState:
     def __init__(self, owner_id):
         self.owner_id = owner_id
@@ -51,26 +45,6 @@ class JoinView(discord.ui.View):
             return
         game.participants.add(interaction.user.id)
         await interaction.response.send_message(f"{interaction.user.display_name} が参加しました！", ephemeral=True)
-class PokerJoinView(discord.ui.View):
-    def __init__(self, channel_id):
-        super().__init__(timeout=None)
-        self.channel_id = channel_id
-
-    @discord.ui.button(label="参加する", style=discord.ButtonStyle.primary, custom_id="poker_join_button")
-    async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
-        game = POKER_GAMES.get(self.channel_id)
-        if not game or game.started:
-            await interaction.response.send_message("現在このチャンネルでは参加できません。", ephemeral=True)
-            return
-
-        if interaction.user.id in [p.id for p in game.players]:
-            await interaction.response.send_message("すでに参加しています。", ephemeral=True)
-            return
-
-        game.players.append(interaction.user)
-        await interaction.response.send_message(f"{interaction.user.display_name} さんが参加しました！", ephemeral=True)
-        await interaction.channel.send(f"🃏 {interaction.user.mention} さんがポーカーに参加しました！")
-
 
 @bot.tree.command(name="quiz_start")
 async def quiz_start(interaction: discord.Interaction):
@@ -179,8 +153,7 @@ async def quiz_skip(interaction: discord.Interaction):
 
 @bot.event
 async def on_ready():
-    bot.add_view(JoinView(None))
-    bot.add_view(PokerJoinView(None))
+    bot.add_view(JoinView(None))  # クイズ用ボタンだけ残す
     await bot.tree.sync(guild=discord.Object(id=1398607685158440991))
     print(f"✅ Bot connected as {bot.user}")
 @bot.command()
@@ -190,6 +163,7 @@ async def sync(ctx):
 
 keep_alive()
 bot.run(os.environ["DISCORD_TOKEN"])
+
 
 
 
