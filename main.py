@@ -21,7 +21,6 @@ intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 games = {}
-POKER_GAMES = {}  # チャンネルIDごとのポーカー状態
 with open("pokedex.json", "r", encoding="utf-8") as f:
     POKEDEX = {int(k): v for k, v in json.load(f).items()}
 
@@ -177,47 +176,6 @@ async def quiz_skip(interaction: discord.Interaction):
     game.current_answer = None
     await interaction.response.send_message("問題をスキップしました。次の問題を出題します。")
     await send_quiz(interaction.channel, game)
-# --------------------
-# ポーカー機能
-# --------------------
-class PokerGameState:
-    def __init__(self, owner_id):
-        self.owner_id = owner_id
-        self.players = []
-        self.started = False
-
-class PokerJoinView(discord.ui.View):
-    def __init__(self, channel_id):
-        super().__init__(timeout=None)
-        self.channel_id = channel_id
-
-    @discord.ui.button(label="参加する", style=discord.ButtonStyle.primary, custom_id="poker_join_button")
-    async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
-        game = POKER_GAMES.get(self.channel_id)
-        if not game or game.started:
-            await interaction.response.send_message("現在このチャンネルでは参加できません。", ephemeral=True)
-            return
-
-        if interaction.user.id in [p.id for p in game.players]:
-            await interaction.response.send_message("すでに参加しています。", ephemeral=True)
-            return
-
-        game.players.append(interaction.user)
-        await interaction.response.send_message("参加が完了しました！", ephemeral=True)
-        await interaction.channel.send(f"✅ {interaction.user.mention} さんがポーカーに参加しました！")
-
-@bot.tree.command(name="joinpoker", description="ポーカーの参加者を募集します")
-async def join_poker(interaction: discord.Interaction):
-    if interaction.channel_id in POKER_GAMES:
-        await interaction.response.send_message("このチャンネルではすでにポーカーが開催中です。", ephemeral=True)
-        return
-
-    POKER_GAMES[interaction.channel_id] = PokerGameState(owner_id=interaction.user.id)
-    view = PokerJoinView(channel_id=interaction.channel_id)
-    await interaction.response.send_message(
-        "🃏 ポーカーゲームを開始しました！\n参加するには以下のボタンを押してください👇",
-        view=view
-    )
 
 @bot.event
 async def on_ready():
@@ -232,6 +190,7 @@ async def sync(ctx):
 
 keep_alive()
 bot.run(os.environ["DISCORD_TOKEN"])
+
 
 
 
