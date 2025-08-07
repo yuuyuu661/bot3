@@ -17,6 +17,7 @@ PAY_COMMAND_PREFIX = "/pay"  # VirtualCryptoのコマンド
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+GUILD_ID = 1398607685158440991
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -46,7 +47,7 @@ class JoinView(discord.ui.View):
         game.participants.add(interaction.user.id)
         await interaction.response.send_message(f"{interaction.user.display_name} が参加しました！", ephemeral=True)
 
-@bot.tree.command(name="quiz_start")
+@bot.tree.command(name="quiz_start", guild=discord.Object(id=GUILD_ID))
 async def quiz_start(interaction: discord.Interaction):
     if interaction.channel_id in games:
         await interaction.response.send_message("このチャンネルではすでにクイズが開催されています。", ephemeral=True)
@@ -55,7 +56,7 @@ async def quiz_start(interaction: discord.Interaction):
     view = JoinView(channel_id=interaction.channel_id)
     await interaction.response.send_message("ポケモンフュージョンクイズを開始します！\n参加するには以下のボタンを押してください👇", view=view)
 
-@bot.tree.command(name="quiz_begin")
+@bot.tree.command(name="quiz_begin", guild=discord.Object(id=GUILD_ID))
 async def quiz_begin(interaction: discord.Interaction):
     game = games.get(interaction.channel_id)
     if not game:
@@ -115,7 +116,7 @@ async def announce_winner(channel, game):
         embed.add_field(name=f"{i}位：{member.display_name}", value=f"{score}ポイント", inline=False)
     await channel.send(embed=embed)
 
-@bot.tree.command(name="quiz_ranking")
+@bot.tree.command(name="quiz_ranking", guild=discord.Object(id=GUILD_ID))
 async def quiz_ranking(interaction: discord.Interaction):
     game = games.get(interaction.channel_id)
     if not game or not game.scores:
@@ -128,7 +129,7 @@ async def quiz_ranking(interaction: discord.Interaction):
         embed.add_field(name=f"{i}位：{member.display_name}", value=f"{score}ポイント", inline=False)
     await interaction.response.send_message(embed=embed)
 
-@bot.tree.command(name="quiz_stop")
+@bot.tree.command(name="quiz_stop", guild=discord.Object(id=GUILD_ID))
 async def quiz_stop(interaction: discord.Interaction):
     game = games.get(interaction.channel_id)
     if not game:
@@ -138,7 +139,7 @@ async def quiz_stop(interaction: discord.Interaction):
     await announce_winner(interaction.channel, game)
     del games[interaction.channel_id]
 
-@bot.tree.command(name="quiz_skip")
+@bot.tree.command(name="quiz_skip", guild=discord.Object(id=GUILD_ID))
 async def quiz_skip(interaction: discord.Interaction):
     game = games.get(interaction.channel_id)
     if not game or not game.active:
@@ -163,6 +164,7 @@ async def sync(ctx):
 
 keep_alive()
 bot.run(os.environ["DISCORD_TOKEN"])
+
 
 
 
