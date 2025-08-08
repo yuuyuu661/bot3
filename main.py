@@ -271,11 +271,18 @@ async def delete_range(interaction: discord.Interaction, period: str):
     except discord.InteractionResponded:
         pass
 
-@bot.tree.command(name="create_private_vc", description="期間付きプライベートVCを作成", guild=discord.Object(id=GUILD_ID))
+@bot.tree.command(
+    name="create_private_vc",
+    description="期間付きプライベートVCを作成",
+    guild=discord.Object(id=GUILD_ID)
+)
 @requires_admin_role()
-@app_commands.describe(target_user="初期メンバーに追加するユーザー", period="例: 2025-08-08-21:00～2025-08-09-00:00")
+@app_commands.describe(
+    target_user="初期メンバーに追加するユーザー",
+    period="例: 2025-08-08-21:00～2025-08-09-00:00"
+)
 async def create_private_vc(interaction: discord.Interaction, target_user: discord.Member, period: str):
-    """指定期間だけ存在するプライベートVCを作る"""
+    """指定期間だけ存在するプライベートVCを作る（ユーザー名でVC作成、固定カテゴリー）"""
     try:
         start, end = parse_period_str(period)
     except Exception as e:
@@ -290,8 +297,8 @@ async def create_private_vc(interaction: discord.Interaction, target_user: disco
         await interaction.response.send_message("Botに『チャンネルの管理』権限が必要です。", ephemeral=True)
         return
 
-    # VC名
-    vc_name = f"private-{interaction.user.display_name}"
+    # VC名は引数で指定された target_user の表示名
+    vc_name = f"private-{target_user.display_name}"
 
     # 権限オーバーライト
     overwrites = {
@@ -301,8 +308,22 @@ async def create_private_vc(interaction: discord.Interaction, target_user: disco
         target_user: discord.PermissionOverwrite(view_channel=True, connect=True),
     }
 
-    # VC作成
-    vc = await guild.create_voice_channel(name=vc_name, overwrites=overwrites, reason="期間付きプライベートVC")
+    # 固定カテゴリーID（置き換えて使用）
+    PRIVATE_VC_CATEGORY_ID = 1399413936322777179  # ← 実際のカテゴリーIDに変更
+    category = discord.utils.get(guild.categories, id=PRIVATE_VC_CATEGORY_ID)
+
+    if category is None:
+        await interaction.response.send_message("指定されたカテゴリーが見つかりません。", ephemeral=True)
+        return
+
+    # VC作成（固定カテゴリー内）
+    vc = await guild.create_voice_channel(
+        name=vc_name,
+        overwrites=overwrites,
+        category=category,
+        reason="期間付きプライベートVC"
+    )
+
     PRIVATE_VC[vc.id] = {"owner_id": interaction.user.id, "start": start, "end": end}
 
     msg = (
@@ -419,3 +440,4 @@ async def sync(ctx):
 # ========= 起動 =========
 keep_alive()
 bot.run(os.environ["DISCORD_TOKEN"])
+
