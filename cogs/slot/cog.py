@@ -4,7 +4,9 @@ from discord import app_commands
 from discord.ext import commands
 from .view import SlotView, create_panel_embed
 from .database import db   # ← ここを追加
+GUILD_ID = 1420918259187712093
 
+@app_commands.guilds(discord.Object(id=GUILD_ID))
 class SlotCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
