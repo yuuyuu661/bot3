@@ -66,5 +66,3 @@ class SlotCog(commands.Cog):
             ephemeral=False
         )
 
-async def setup(bot):
-    pass
