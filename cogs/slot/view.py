@@ -5,6 +5,7 @@ from .database import db
 from .engine import SlotEngine
 import asyncio
 import random
+from discord.ext import commands
 
 def create_panel_embed():
     embed = discord.Embed(
@@ -19,7 +20,7 @@ def create_panel_embed():
 
 
 class SlotView(View):
-    def __init__(self, bot: discord.Bot):
+    def __init__(self, bot: commands.Bot):
         super().__init__(timeout=None)
         self.bot = bot
         self.spinning = set()
