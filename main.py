@@ -19,6 +19,8 @@ bot = commands.Bot(
     intents=intents,
     help_command=None
 )
+GUILD_ID = 1420918259187712093
+GUILD_OBJ = discord.Object(id=GUILD_ID)
 
 # ====================== 起動処理 ======================
 @bot.event
@@ -28,7 +30,7 @@ async def on_ready():
     print(f"Bot ID: {bot.user.id}")
 
     try:
-        synced = await bot.tree.sync()
+        synced = await bot.tree.sync(guild=GUILD_OBJ)
         print(f"スラッシュコマンド同期完了: {len(synced)}個")
 
     except Exception as e:
