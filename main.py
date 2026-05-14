@@ -30,7 +30,7 @@ async def on_ready():
     print(f"Bot ID: {bot.user.id}")
 
     try:
-        synced = await bot.tree.sync(guild=GUILD_OBJ)
+        synced = await bot.tree.sync()
         print(f"スラッシュコマンド同期完了: {len(synced)}個")
 
     except Exception as e:
