@@ -35,7 +35,7 @@ async def main():
         
         # Bot起動
         print("🚀 Botを起動しています...")
-        await bot.start("MTQ5NTcxMjMxOTU3MjAxNzIzMw.GaLp28.U8sCuTHQ0ilYW6WPsRVHAlprGXyjEhQYE6Bo8U")
+        await bot.start("MTUwNDM4MjUzMzQwNjU2MDM5Nw.GDdCJI.obPCXx6LsHj4x2yUF4aYAMkXzelI4XI_r9VIyw")
         
     except discord.LoginFailure:
         print("❌ トークンが無効です。正しいトークンを貼り付けてください。")
