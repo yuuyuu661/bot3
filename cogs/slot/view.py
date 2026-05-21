@@ -1,6 +1,7 @@
 # cogs/slot/view.py
 import discord
 from discord.ui import View, button
+from discord.ext import commands
 from .database import db
 from .engine import SlotEngine
 import asyncio
@@ -19,7 +20,7 @@ def create_panel_embed():
 
 
 class SlotView(View):
-    def __init__(self, bot: discord.Bot):
+    def __init__(self, bot: commands.Bot):
         super().__init__(timeout=None)
         self.bot = bot
         self.spinning = set()
